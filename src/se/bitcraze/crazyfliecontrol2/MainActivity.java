@@ -228,19 +228,32 @@ public class MainActivity extends EspActivity {
 
                     InputStream input = connection.getInputStream();
                     Bitmap frame = BitmapFactory.decodeStream(input);
+if (frame == null || surfaceHolder == null) {
+    input.close();
+    continue;
+}
 
-                    if (frame != null && surfaceHolder != null) {
-                        Canvas canvas = surfaceHolder.lockCanvas();
-                        if (canvas != null) {
-                            Rect dst = new Rect(
-                                0, 0,
-                                canvas.getWidth(),
-                                canvas.getHeight()
-                            );
-                            canvas.drawBitmap(frame, null, dst, null);
-                            surfaceHolder.unlockCanvasAndPost(canvas);
-                        }
-                    }
+Canvas canvas = null;
+
+try {
+    canvas = surfaceHolder.lockCanvas();
+    if (canvas == null) {
+        input.close();
+        continue;
+    }
+
+    Rect dst = new Rect(0, 0, canvas.getWidth(), canvas.getHeight());
+    canvas.drawBitmap(frame, null, dst, null);
+
+} catch (Exception ex) {
+    ex.printStackTrace();
+
+} finally {
+    if (canvas != null) {
+        surfaceHolder.unlockCanvasAndPost(canvas);
+    }
+    input.close();
+}
 
                     input.close();
                     connection.disconnect();
