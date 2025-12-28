@@ -205,46 +205,55 @@ private static final String STREAM_URL = "http://192.168.4.1/stream.jpg";
 
         setCacheDir();
     }
-    
     private void startHttpStream() {
     streaming = true;
 
-    new Thread(() -> {
-        HttpURLConnection connection = null;
+    new Thread(new Runnable() {
+        @Override
+        public void run() {
 
-        try {
-            while (streaming) {
-                URL url = new URL(STREAM_URL);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setConnectTimeout(3000);
-                connection.setReadTimeout(3000);
+            HttpURLConnection connection = null;
 
-                InputStream input = connection.getInputStream();
-                Bitmap frame = BitmapFactory.decodeStream(input);
+            try {
+                while (streaming) {
 
-                if (frame != null && surfaceHolder != null) {
-                    Canvas canvas = surfaceHolder.lockCanvas();
-                    if (canvas != null) {
-                        Rect dst = new Rect(0, 0,
-                                canvas.getWidth(), canvas.getHeight());
-                        canvas.drawBitmap(frame, null, dst, null);
-                        surfaceHolder.unlockCanvasAndPost(canvas);
+                    URL url = new URL(STREAM_URL);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setConnectTimeout(3000);
+                    connection.setReadTimeout(3000);
+
+                    InputStream input = connection.getInputStream();
+                    Bitmap frame = BitmapFactory.decodeStream(input);
+
+                    if (frame != null && surfaceHolder != null) {
+                        Canvas canvas = surfaceHolder.lockCanvas();
+                        if (canvas != null) {
+                            Rect dst = new Rect(
+                                0, 0,
+                                canvas.getWidth(),
+                                canvas.getHeight()
+                            );
+                            canvas.drawBitmap(frame, null, dst, null);
+                            surfaceHolder.unlockCanvasAndPost(canvas);
+                        }
                     }
+
+                    input.close();
+                    connection.disconnect();
                 }
 
-                input.close();
-                connection.disconnect();
+            } catch (Exception e) {
+                e.printStackTrace();
+
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (connection != null)
-                connection.disconnect();
         }
-
     }).start();
-    }
+}
+    
 
     private void initializeSounds() {
         this.setVolumeControlStream(AudioManager.STREAM_MUSIC);
