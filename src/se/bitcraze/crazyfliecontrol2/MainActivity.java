@@ -31,6 +31,16 @@ import java.io.File;
 import java.util.List;
 import java.util.Locale;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 import se.bitcraze.crazyflie.lib.crazyradio.Crazyradio;
 import se.bitcraze.crazyfliecontrol.controller.Controls;
 import se.bitcraze.crazyfliecontrol.controller.GamepadController;
@@ -88,7 +98,12 @@ public class MainActivity extends EspActivity {
 
     private static final String LOG_TAG = "CrazyflieControl";
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 42;
-
+    
+    private SurfaceView videoView;
+private SurfaceHolder surfaceHolder;
+private volatile boolean streaming = false;
+private static final String STREAM_URL = "http://192.168.4.1/stream.jpg";
+    
     private JoystickView mJoystickViewLeft;
     private JoystickView mJoystickViewRight;
     private FlightDataView mFlightDataView;
@@ -136,6 +151,11 @@ public class MainActivity extends EspActivity {
 
         setBatteryLevel(-1.0f);
         setLinkQualityText("N/A");
+        videoView = findViewById(R.id.video_view);
+        if (videoView != null) {
+        surfaceHolder = videoView.getHolder();
+        startHttpStream();
+        }
 
         mControls = new Controls(this, mPreferences);
         mControls.setDefaultPreferenceValues(getResources());
@@ -184,6 +204,46 @@ public class MainActivity extends EspActivity {
         initializeSounds();
 
         setCacheDir();
+    }
+    
+    private void startHttpStream() {
+    streaming = true;
+
+    new Thread(() -> {
+        HttpURLConnection connection = null;
+
+        try {
+            while (streaming) {
+                URL url = new URL(STREAM_URL);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setConnectTimeout(3000);
+                connection.setReadTimeout(3000);
+
+                InputStream input = connection.getInputStream();
+                Bitmap frame = BitmapFactory.decodeStream(input);
+
+                if (frame != null && surfaceHolder != null) {
+                    Canvas canvas = surfaceHolder.lockCanvas();
+                    if (canvas != null) {
+                        Rect dst = new Rect(0, 0,
+                                canvas.getWidth(), canvas.getHeight());
+                        canvas.drawBitmap(frame, null, dst, null);
+                        surfaceHolder.unlockCanvasAndPost(canvas);
+                    }
+                }
+
+                input.close();
+                connection.disconnect();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (connection != null)
+                connection.disconnect();
+        }
+
+    }).start();
     }
 
     private void initializeSounds() {
@@ -429,6 +489,7 @@ public class MainActivity extends EspActivity {
 
     @Override
     protected void onDestroy() {
+        streaming = false;
         Log.d(LOG_TAG, "onDestroy()");
         unregisterReceiver(mUsbReceiver);
         mSoundPool.release();
