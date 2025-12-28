@@ -100,9 +100,9 @@ public class MainActivity extends EspActivity {
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 42;
     
     private SurfaceView videoView;
-private SurfaceHolder surfaceHolder;
-private volatile boolean streaming = false;
-private static final String STREAM_URL = "http://192.168.4.1/stream.jpg";
+    private SurfaceHolder surfaceHolder;
+    private boolean streaming = false;
+    private static final String STREAM_URL = "http://192.168.4.1:81/stream";
     
     private JoystickView mJoystickViewLeft;
     private JoystickView mJoystickViewRight;
@@ -151,11 +151,15 @@ private static final String STREAM_URL = "http://192.168.4.1/stream.jpg";
 
         setBatteryLevel(-1.0f);
         setLinkQualityText("N/A");
+        
         videoView = findViewById(R.id.video_view);
-        if (videoView != null) {
         surfaceHolder = videoView.getHolder();
-        startHttpStream();
-        }
+        videoView.post(new Runnable() {
+           @Override
+          public void run() {
+            startHttpStream();
+              }
+           });
 
         mControls = new Controls(this, mPreferences);
         mControls.setDefaultPreferenceValues(getResources());
@@ -484,6 +488,7 @@ private static final String STREAM_URL = "http://192.168.4.1/stream.jpg";
 
     @Override
     protected void onPause() {
+        streaming = false;
         super.onPause();
         Log.d(LOG_TAG, "onPause()");
         if (mControls != null) {
