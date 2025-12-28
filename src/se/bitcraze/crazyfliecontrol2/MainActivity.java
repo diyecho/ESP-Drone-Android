@@ -157,7 +157,7 @@ public class MainActivity extends EspActivity {
         videoView.post(new Runnable() {
            @Override
           public void run() {
-           // startHttpStream();
+             startHttpStream();
               }
            });
 
