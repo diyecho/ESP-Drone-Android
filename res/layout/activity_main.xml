@@ -123,7 +123,22 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </FrameLayout>
+    <!-- (Hidden) Console — kept only to avoid crashes -->
+   <ScrollView
+    android:id="@+id/console_scrollView"
+    android:layout_width="180dp"
+    android:layout_height="200dp"
+    android:layout_below="@+id/flightdataview"
+    android:layout_centerHorizontal="true"
+    android:layout_marginTop="25dp"
+    android:visibility="gone">
 
+      <TextView
+        android:id="@+id/console_textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="10dp" />
+      </ScrollView>
 
     <!-- JOYSTICKS -->
     <com.MobileAnarchy.Android.Widgets.Joystick.JoystickView
