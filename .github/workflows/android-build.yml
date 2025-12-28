@@ -26,5 +26,5 @@ jobs:
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ESP-Drone-App
-        path: app/build/outputs/apk/debug/*.apk
+       name: debug-apk
+       path: "**/build/outputs/apk/debug/*.apk"
